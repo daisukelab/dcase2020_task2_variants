@@ -25,6 +25,7 @@ import numpy
 from tqdm import tqdm
 from sklearn import metrics
 # original lib
+sys.path.append('..')
 import common as com
 import keras_model
 ########################################################################
