@@ -3,6 +3,8 @@
  @brief  Commonly used script
  @author Toshiki Nakamura, Yuki Nikaido, and Yohei Kawaguchi (Hitachi Ltd.)
  Copyright (C) 2020 Hitachi, Ltd. All right reserved.
+
+Modified by daisukelab.
 """
 
 ########################################################################
@@ -20,8 +22,8 @@ import librosa
 import librosa.core
 import librosa.feature
 import yaml
-from tqdm import tqdm
-
+from tqdm.auto import tqdm
+import torch
 ########################################################################
 
 
@@ -265,3 +267,27 @@ def file_list_generator(target_dir,
     logger.info("train_file num : {num}".format(num=len(files)))
     return files
 ########################################################################
+
+
+########################################################################
+# PyTorch utilities
+########################################################################
+
+class ToTensor1d(object):
+    """PyTorch basic transform to convert numpy array to torch.Tensor.
+    Args:
+        array: (dim,) or (batch, dims) feature array.
+    """
+    def __init__(self, device=None):
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    def __call__(self, array):
+        # (dims)
+        if len(array.shape) == 1:
+            return torch.Tensor(array).unsqueeze(0).to(self.device)
+        # (batch, dims)
+        assert len(array.shape) == 2
+        return torch.Tensor(array).unsqueeze(1).to(self.device)
+
+    def __repr__(self):
+        return 'to_tensor_1d'

@@ -3,7 +3,7 @@ eval_directory : ../eval_data
 model_directory: ./model
 result_directory: ./result
 result_file: result.csv
-target: ['slider']
+#target: ['pump', 'slider']  #  set this when you want to test for specific target only.
 
 max_fpr : 0.1
 
@@ -19,7 +19,7 @@ fit:
   compile:
     optimizer : adam
     loss : mean_squared_error
-  epochs : 1 # 100
+  epochs : 100
   batch_size : 512
   shuffle : True
   validation_split : 0.1
