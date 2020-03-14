@@ -10,7 +10,8 @@ librosa==0.6.0
 audioread==2.1.5
 setuptools==41.0.0
 tensorflow==1.15.0
-tqdm==4.23.4
+tqdm>=4.43.0
 pytorch-lightning
 dl-cliche
 torchsummary
+EasyDict

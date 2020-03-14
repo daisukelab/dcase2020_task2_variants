@@ -256,7 +256,7 @@ def file_list_generator(target_dir,
         train_files : list [ str ]
             file list for training
     """
-    logger.info("target_dir : {}".format(target_dir))
+    logger.info("target_dir : {}".format('/'.join(str(target_dir).split('/')[-2:])))
 
     # generate training list
     training_list_path = os.path.abspath("{dir}/{dir_name}/*.{ext}".format(dir=target_dir, dir_name=dir_name, ext=ext))
@@ -264,7 +264,7 @@ def file_list_generator(target_dir,
     if len(files) == 0:
         logger.exception(f"{training_list_path} -> no_wav_file!!")
 
-    logger.info("train_file num : {num}".format(num=len(files)))
+    logger.info("# of training samples : {num}".format(num=len(files)))
     return files
 ########################################################################
 

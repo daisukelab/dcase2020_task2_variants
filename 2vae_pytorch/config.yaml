@@ -20,7 +20,7 @@ fit:
   b2: 0.999
   weight_decay: 0.0
   epochs : 100
-  batch_size : 512
+  batch_size : 1000
   shuffle : True
   validation_split : 0.1
   verbose : 1
