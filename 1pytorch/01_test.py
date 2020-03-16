@@ -29,7 +29,8 @@ from dlcliche.utils import deterministic_everything
 # original lib
 sys.path.append('..')
 import common as com
-import pytorch_model
+import pytorch_common
+import model 
 ########################################################################
 
 
@@ -193,7 +194,9 @@ if __name__ == "__main__":
         if not os.path.exists(model_file):
             com.logger.error("{} model not found ".format(machine_type))
             sys.exit(-1)
-        model = pytorch_model.load_model(model_file, summary=True).to(device)
+        model = model.Task2Baseline().to(device)
+        pytorch_common.load_weights(model, model_file)
+        pytorch_common.summary(device, model)
         model.eval()
 
         if mode:

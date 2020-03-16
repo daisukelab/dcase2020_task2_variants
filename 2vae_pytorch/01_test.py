@@ -25,11 +25,12 @@ import torch
 # from import
 from tqdm import tqdm
 from sklearn import metrics
-from dlcliche.utils import deterministic_everything
+from dlcliche.utils import deterministic_everything, EasyDict
 # original lib
 sys.path.append('..')
 import common as com
-import pytorch_model
+import pytorch_common
+import model 
 ########################################################################
 
 
@@ -43,7 +44,7 @@ deterministic_everything(2022, pytorch=True)
 ########################################################################
 # load parameter.yaml
 ########################################################################
-param = com.yaml_load('config.yaml')
+params = EasyDict(com.yaml_load('config.yaml'))
 #######################################################################
 
 
@@ -172,10 +173,10 @@ if __name__ == "__main__":
         sys.exit(-1)
 
     # make output result directory
-    os.makedirs(param["result_directory"], exist_ok=True)
+    os.makedirs(params.result_directory, exist_ok=True)
 
     # load base directory
-    dirs = com.select_dirs(param=param, mode=mode)
+    dirs = com.select_dirs(param=params, mode=mode)
 
     # initialize lines in csv for AUC and pAUC
     csv_lines = []
@@ -192,7 +193,7 @@ if __name__ == "__main__":
 
         print("============== MODEL LOAD ==============")
         # set model path
-        model_file = "{model}/model_{machine_type}.pth".format(model=param["model_directory"],
+        model_file = "{model}/model_{machine_type}.pth".format(model=params.model_directory,
                                                                machine_type=machine_type)
 
         # load model file
@@ -200,7 +201,9 @@ if __name__ == "__main__":
             com.logger.error("{} model not found ".format(machine_type))
             sys.exit(-1)
         com.logger.info("loading model: {}".format(model_file))
-        model = pytorch_model.load_model(model_file, type='vae', summary=True).to(device)
+        model = model.VAE(device, x_dim=params.VAE.x_dim, h_dim=params.VAE.h_dim, z_dim=params.VAE.z_dim).to(device)
+        pytorch_common.load_weights(model, model_file)
+        pytorch_common.summary(device, model)
         model.eval()
 
         if mode:
@@ -217,7 +220,7 @@ if __name__ == "__main__":
 
             # setup anomaly score file path
             anomaly_score_csv = "{result}/anomaly_score_{machine_type}_{id_str}.csv".format(
-                                                                                     result=param["result_directory"],
+                                                                                     result=params.result_directory,
                                                                                      machine_type=machine_type,
                                                                                      id_str=id_str)
             anomaly_score_list = []
@@ -227,11 +230,11 @@ if __name__ == "__main__":
             for file_idx, file_path in tqdm(enumerate(test_files), total=len(test_files)):
                 try:
                     data = com.file_to_vector_array(file_path,
-                                                    n_mels=param["feature"]["n_mels"],
-                                                    frames=param["feature"]["frames"],
-                                                    n_fft=param["feature"]["n_fft"],
-                                                    hop_length=param["feature"]["hop_length"],
-                                                    power=param["feature"]["power"])
+                                                    n_mels=params.feature.n_mels,
+                                                    frames=params.feature.frames,
+                                                    n_fft=params.feature.n_fft,
+                                                    hop_length=params.feature.hop_length,
+                                                    power=params.feature.power)
                     data = normalize_0to1(data)
                     with torch.no_grad():
                         yhat = model(to_tensor(data)).cpu().detach().numpy().reshape(data.shape)
@@ -249,7 +252,7 @@ if __name__ == "__main__":
             if mode:
                 # append AUC and pAUC to lists
                 auc = metrics.roc_auc_score(y_true, y_pred)
-                p_auc = metrics.roc_auc_score(y_true, y_pred, max_fpr=param["max_fpr"])
+                p_auc = metrics.roc_auc_score(y_true, y_pred, max_fpr=params.max_fpr)
                 csv_lines.append([id_str.split("_", 1)[1], auc, p_auc])
                 performance.append([auc, p_auc])
                 com.logger.info("AUC : {}".format(auc))
@@ -265,6 +268,6 @@ if __name__ == "__main__":
 
     if mode:
         # output results
-        result_path = "{result}/{file_name}".format(result=param["result_directory"], file_name=param["result_file"])
+        result_path = "{result}/{file_name}".format(result=params.result_directory, file_name=params.result_file)
         com.logger.info("AUC and pAUC results -> {}".format(result_path))
         save_csv(save_file_path=result_path, save_data=csv_lines)

@@ -56,11 +56,12 @@ __versions__ = "1.0.0"
 ########################################################################
 # argparse
 ########################################################################
-def command_line_chk():
+def command_line_chk(return_args=False):
     parser = argparse.ArgumentParser(description='Without option argument, it will not run properly.')
     parser.add_argument('-v', '--version', action='store_true', help="show application version")
     parser.add_argument('-e', '--eval', action='store_true', help="run mode Evaluation")
     parser.add_argument('-d', '--dev', action='store_true', help="run mode Development")
+    parser.add_argument('--mode', type=str, default='baseline', help='chooses which model to use. [baseline | vae | vae_r2]')
     args = parser.parse_args()
     if args.version:
         print("===============================")
@@ -75,7 +76,7 @@ def command_line_chk():
         flag = None
         print("incorrect argument")
         print("please set option argument '--dev' or '--eval'")
-    return flag
+    return (flag, args) if return_args else flag
 ########################################################################
 
 

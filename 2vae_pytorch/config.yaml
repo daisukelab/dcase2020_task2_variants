@@ -3,7 +3,7 @@ eval_directory : ../eval_data
 model_directory: ./model
 result_directory: ./result
 result_file: result.csv
-#target: ['pump', 'slider']  #  set this when you want to test for specific target only.
+target: ['ToyConveyor']  #  set this when you want to test for specific target only.
 
 max_fpr : 0.1
 
@@ -24,3 +24,8 @@ fit:
   shuffle : True
   validation_split : 0.1
   verbose : 1
+
+VAE:
+  x_dim: 640
+  h_dim: 400
+  z_dim: 20
