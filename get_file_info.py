@@ -1,0 +1,29 @@
+from dlcliche.utils import *
+from common import *
+
+
+DATA_ROOT = Path('/mnt/dataset/dcase2020task2/dev')
+
+types = [t.name for t in sorted(DATA_ROOT.glob('*'))]
+print(types)
+
+df = pd.DataFrame()
+df['file'] = sorted(DATA_ROOT.glob('*/*/*.wav'))
+df['type'] = df.file.map(lambda f: f.parent.parent.name)
+df['split'] = df.file.map(lambda f: f.parent.name)
+
+
+def get_wave_info(filename):
+    wav, sampling_rate = librosa.load(filename)
+    print(filename)
+    return wav.shape[0], sampling_rate, wav.shape[-1]/sampling_rate
+
+
+df['infos'] = df.file.apply(lambda f: get_wave_info(f))
+
+df['frames'] = df.infos.map(lambda x: x[0])
+df['sampling_rate'] = df.infos.map(lambda x: x[1])
+df['sec'] = df.infos.map(lambda x: x[2])
+
+del df['infos']
+df.set_index('file').to_csv('file_info.csv')
