@@ -30,7 +30,7 @@ from dlcliche.utils import deterministic_everything, EasyDict
 sys.path.append('..')
 import common as com
 import pytorch_common
-import model 
+from model import *
 ########################################################################
 
 
@@ -152,12 +152,6 @@ def test_file_list_generator(target_dir,
         print("\n=========================================")
 
     return files, labels
-
-
-def normalize_0to1(X):
-    X = (X + 90.) / (24. + 90.)
-    X = numpy.clip(X, 0., 1.)
-    return X
 ########################################################################
 
 
@@ -201,7 +195,7 @@ if __name__ == "__main__":
             com.logger.error("{} model not found ".format(machine_type))
             sys.exit(-1)
         com.logger.info("loading model: {}".format(model_file))
-        model = model.VAE(device, x_dim=params.VAE.x_dim, h_dim=params.VAE.h_dim, z_dim=params.VAE.z_dim).to(device)
+        model = VAE(device, x_dim=params.VAE.x_dim, h_dim=params.VAE.h_dim, z_dim=params.VAE.z_dim).to(device)
         pytorch_common.load_weights(model, model_file)
         pytorch_common.summary(device, model)
         model.eval()
@@ -235,7 +229,7 @@ if __name__ == "__main__":
                                                     n_fft=params.feature.n_fft,
                                                     hop_length=params.feature.hop_length,
                                                     power=params.feature.power)
-                    data = normalize_0to1(data)
+                    data = pytorch_common.normalize_0to1(data)
                     with torch.no_grad():
                         yhat = model(to_tensor(data)).cpu().detach().numpy().reshape(data.shape)
                         errors = numpy.mean(numpy.square(data - yhat), axis=1)

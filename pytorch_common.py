@@ -13,8 +13,8 @@ def load_weights(model, weight_file):
     model.load_state_dict(torch.load(weight_file))
 
 
-def summary(device, model):
-    torchsummary.summary(model.to(device), input_size=(1, 640))
+def summary(device, model, input_size=(1, 640)):
+    torchsummary.summary(model.to(device), input_size=input_size)
 
 
 def summarize_weights(model):
@@ -29,18 +29,54 @@ def summarize_weights(model):
     return summary
 
 
-def show_some_predictions(dl, model, start_index, n_samples):
+def show_some_predictions(dl, model, start_index, n_samples, image=False):
+    shape = (-1, 64, 64) if image else (-1, 640)
     x, y = next(iter(dl))
     with torch.no_grad():
         yhat = model(x)
-    x = x.cpu().numpy().reshape(-1, 640)
-    yhat = yhat.cpu().numpy().reshape(-1, 640)
+    x = x.cpu().numpy().reshape(shape)
+    yhat = yhat.cpu().numpy().reshape(shape)
     print(x.shape, yhat.shape)
     for sample_idx in range(start_index, start_index + n_samples):
         fig, axs = plt.subplots(1, 2, figsize=(10, 5))
-        axs[0].plot(x[sample_idx])
-        axs[1].plot(yhat[sample_idx])
+        if image:
+            axs[0].imshow(x[sample_idx])
+            axs[1].imshow(yhat[sample_idx])
+        else:
+            axs[0].plot(x[sample_idx])
+            axs[1].plot(yhat[sample_idx])
 
+
+def normalize_0to1(X):
+    # Normalize to range from [-90, 24] to [0, 1] based on dataset quick stat check.
+    X = (X + 90.) / (24. + 90.)
+    X = np.clip(X, 0., 1.)
+    return X
+
+
+class ToTensor1ch(object):
+    """PyTorch basic transform to convert np array to torch.Tensor.
+    Args:
+        array: (dim,) or (batch, dims) feature array.
+    """
+    def __init__(self, device=None, image=False):
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.non_batch_shape_len = 2 if image else 1
+
+    def __call__(self, array):
+        # (dims)
+        if len(array.shape) == self.non_batch_shape_len:
+            return torch.Tensor(array).unsqueeze(0).to(self.device)
+        # (batch, dims)
+        return torch.Tensor(array).unsqueeze(1).to(self.device)
+
+    def __repr__(self):
+        return 'to_tensor_1d'
+
+
+########################################################################
+# PyTorch utilities
+########################################################################
 
 class Task2Dataset(torch.utils.data.Dataset):
     """PyTorch dataset class for task2. Caching to a file supported.
@@ -52,7 +88,7 @@ class Task2Dataset(torch.utils.data.Dataset):
     """
 
     def __init__(self, files, n_mels, frames, n_fft, hop_length, power, transform,
-                 normalize=False, cache_to=None, debug=False):
+                 normalize=False, cache_to=None):
         self.transform = transform
         self.files = files
         self.n_mels, self.frames, self.n_fft = n_mels, frames, n_fft
@@ -72,15 +108,7 @@ class Task2Dataset(torch.utils.data.Dataset):
                 np.save(cache_to, self.X)
 
         if normalize:
-            # Normalize to range from [-90, 24] to [0, 1] based on dataset quick stat check.
-            self.X = (self.X + 90.) / (24. + 90.)
-            self.X = np.clip(self.X, 0., 1.)
-        if debug:
-            from dlcliche.utils import display
-            from dlcliche.math import np_describe
-            for x, _ in dl:
-                display(np_describe(x.cpu().numpy()))
-                break  # Show first range only
+            self.X = normalize_0to1(self.X)
 
     def __len__(self):
         return len(self.X)
@@ -102,9 +130,10 @@ class Task2Lightning(pl.LightningModule):
         self.model = model
         self.mseloss = torch.nn.MSELoss()
         # split data files
-        n_val = int(params.fit.validation_split * len(files))
-        self.val_files = random.sample(files, n_val)
-        self.train_files = [f for f in files if f not in self.val_files]
+        if files is not None:
+            n_val = int(params.fit.validation_split * len(files))
+            self.val_files = random.sample(files, n_val)
+            self.train_files = [f for f in files if f not in self.val_files]
 
     def forward(self, x):
         return self.model(x)
@@ -140,7 +169,7 @@ class Task2Lightning(pl.LightningModule):
                           n_fft=self.params.feature.n_fft,
                           hop_length=self.params.feature.hop_length,
                           power=self.params.feature.power,
-                          transform=com.ToTensor1d(device=self.device),
+                          transform=com.ToTensor1ch(device=self.device),
                           normalize=self.normalize,
                           cache_to=cache_file)
         return torch.utils.data.DataLoader(ds, batch_size=self.params.fit.batch_size,

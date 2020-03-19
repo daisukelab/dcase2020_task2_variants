@@ -58,13 +58,13 @@ __versions__ = "1.0.0"
 ########################################################################
 # argparse
 ########################################################################
-def command_line_chk(return_args=False):
+def command_line_chk(args=None, return_args=False):
     parser = argparse.ArgumentParser(description='Without option argument, it will not run properly.')
     parser.add_argument('-v', '--version', action='store_true', help="show application version")
     parser.add_argument('-e', '--eval', action='store_true', help="run mode Evaluation")
     parser.add_argument('-d', '--dev', action='store_true', help="run mode Development")
     parser.add_argument('--mode', type=str, default='baseline', help='chooses which model to use. [baseline | vae | vae_r2]')
-    args = parser.parse_args()
+    args = parser.parse_args(args=args)
     if args.version:
         print("===============================")
         print("DCASE 2020 task 2 baseline\nversion {}".format(__versions__))
@@ -190,6 +190,7 @@ def select_dirs(param, mode):
         logger.info("load_directory <- evaluation")
         dir_path = os.path.abspath("{base}/*".format(base=param["eval_directory"]))
         dirs = sorted(glob.glob(dir_path))
+    dirs = [d for d in dirs if os.path.isdir(d)]
 
     if 'target' in param:
         def is_one_of_in(substrs, full_str):
@@ -271,26 +272,3 @@ def file_list_generator(target_dir,
     return files
 ########################################################################
 
-
-########################################################################
-# PyTorch utilities
-########################################################################
-
-class ToTensor1d(object):
-    """PyTorch basic transform to convert np array to torch.Tensor.
-    Args:
-        array: (dim,) or (batch, dims) feature array.
-    """
-    def __init__(self, device=None):
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-    def __call__(self, array):
-        # (dims)
-        if len(array.shape) == 1:
-            return torch.Tensor(array).unsqueeze(0).to(self.device)
-        # (batch, dims)
-        assert len(array.shape) == 2
-        return torch.Tensor(array).unsqueeze(1).to(self.device)
-
-    def __repr__(self):
-        return 'to_tensor_1d'

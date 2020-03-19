@@ -11,7 +11,8 @@ This repository expands the baseline by:
 
 - Solutions by folders. `0original` holds everything about the original baseline, `1pytorch` is PyTorch version, and so on. Making it easier to duplicate, and try your own ideas on it.
 - PyTorch version provided.
-- VAE was tried.
+- VAE implementation (but result is not good) included.
+- Convolutional Autoencoder implementation (but result is good) included.
 - ... and would have some more in the future.
 
 ## 2. Using examples
@@ -48,7 +49,7 @@ your/1pytorch$ python 01_test.py -d
 
 CAUTION: Performance reproduction is not stable so far.
 
-## 5. 2vae_pytorch: VAE was tried
+## 5. 2vae_pytorch: VAE implementation
 
 In a folder `2vae_pytorch/`, you can find notebooks of simple test results.
 
@@ -117,6 +118,22 @@ id		AUC		pAUC
 Average		0.606872		0.505775
 ```
 
-## 6. Links
+### 5.2 Training curve visualization example
+
+Thanks to PyTorch Lightning and tensorboard, we could visualize training curve. Here's an example.
+
+![training curve](2vae_pytorch/2vae-loss.png)
+
+## 6. 3cnn_ae_pytorch: Convolutional Autoencoder
+
+This is good visualized solution, but the result is not good as you can find in `00-train-with-visual.ipynb`.
+Leaving here as an example. If you will try this, you will need improvements and fine tuning to get better results.
+
+1. Edit `image_preprocess_level1.py` so that it can reach your copy of dataset.
+2. Run `python image_preprocess_level1.py` it will create preprocessed data files under `dev_data`.
+3. Run `00-train-with-visual.ipynb` to train and evaluate models.
+4. If you run `python 01_test.py -d`, you can evaluate models as same as other implementations.
+
+## 7. Links
 
 - [Original baseline repository - https://github.com/y-kawagu/dcase2020_task2_baseline](https://github.com/y-kawagu/dcase2020_task2_baseline)

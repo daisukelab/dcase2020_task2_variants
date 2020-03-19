@@ -1,0 +1,31 @@
+dev_directory : ../dev_data
+eval_directory : ../eval_data
+model_directory: ./model
+result_directory: ./result
+result_file: result.csv
+#target: ['ToyConveyor']  #  set this when you want to test for specific target only.
+
+max_fpr : 0.1
+
+feature:
+  n_mels: 128
+  frames : 5
+  n_fft: 1024
+  hop_length: 512
+  power: 2.0
+
+fit:
+  lr: 0.001
+  b1: 0.9
+  b2: 0.999
+  weight_decay: 0.0
+  epochs : 100
+  batch_size : 256
+  shuffle : True
+  validation_split : 0.1
+  verbose : 1
+
+VAE:
+  x_dim: 640
+  h_dim: 400
+  z_dim: 20
