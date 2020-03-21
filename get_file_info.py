@@ -2,9 +2,9 @@ from dlcliche.utils import *
 from common import *
 
 
-DATA_ROOT = Path('/mnt/dataset/dcase2020task2/dev')
+DATA_ROOT = Path('/data/task2/dev')
 
-types = [t.name for t in sorted(DATA_ROOT.glob('*'))]
+types = [t.name for t in sorted(DATA_ROOT.glob('*')) if t.is_dir()]
 print(types)
 
 df = pd.DataFrame()
@@ -14,7 +14,7 @@ df['split'] = df.file.map(lambda f: f.parent.name)
 
 
 def get_wave_info(filename):
-    wav, sampling_rate = librosa.load(filename)
+    wav, sampling_rate = file_load(filename)
     print(filename)
     return wav.shape[0], sampling_rate, wav.shape[-1]/sampling_rate
 

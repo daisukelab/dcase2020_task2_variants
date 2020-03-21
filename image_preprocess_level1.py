@@ -6,7 +6,7 @@ warnings.filterwarnings("ignore")
 DATA_ROOT = Path('/data/task2/dev') # set your data folder here
 SAVE_TO = Path('./dev_data')
 
-types = [t.name for t in sorted(DATA_ROOT.glob('*'))]
+types = [t.name for t in sorted(DATA_ROOT.glob('*')) if t.is_dir()]
 print('Machine types:', types)
 
 df = pd.DataFrame()
